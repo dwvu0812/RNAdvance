@@ -11,7 +11,11 @@ export default function User({navigation}) {
   }, []);
   return (
     <View>
+      <View style={{backgroundColor: '#5DB075'}}>
       <Text style={styles.text}>User List</Text>
+
+      </View>
+
       <FlatList
         keyExtractor={(item, index) => index.toString()}
         data={users}
@@ -45,7 +49,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     color: '#000',
     fontWeight: '700',
-    marginVertical: 20,
+    marginVertical: 10,
   },
   itemContainer: {
     borderBottomWidth: 1,

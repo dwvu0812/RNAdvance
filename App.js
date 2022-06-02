@@ -1,13 +1,29 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, TouchableOpacity, FlatList} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  Dimensions,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  Image,
+} from 'react-native';
 import APIService from './Networking/API';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import User from './components/User';
 import UserDetail from './components/UserDetail';
+import PostComments from './components/PostComments';
 import Photos from './components/Photos';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
+import {Button, ThemeProvider} from 'react-native-elements';
+
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -15,26 +31,24 @@ const Tab = createBottomTabNavigator();
 function Tabbar() {
   return (
     <Tab.Navigator
-        // screenOptions={{headerShown: false}}
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
+      // screenOptions={{headerShown: false}}
+      screenOptions={({route}) => ({
+        tabBarIcon: ({focused, color, size}) => {
+          let iconName;
 
-            if (route.name === 'Main') {
-              iconName = focused
-                ? 'menu'
-                : 'menu-outline';
-            } else if (route.name === 'User') {
-              iconName = focused ? 'person' : 'person-outline';
-            }
+          if (route.name === 'Main') {
+            iconName = focused ? 'menu' : 'menu-outline';
+          } else if (route.name === 'User') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
 
-            // You can return any component that you like here!
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: 'tomato',
-          tabBarInactiveTintColor: 'gray',
-        })}
-    >
+          // You can return any component that you like here!
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: 'green',
+        tabBarInactiveTintColor: 'gray',
+        headerShown: false,
+      })}>
       <Tab.Screen name="Main" component={Main} />
       <Tab.Screen name="User" component={User} />
     </Tab.Navigator>
@@ -51,53 +65,19 @@ export default function App() {
         <Stack.Screen name="Tabbar" component={Tabbar} />
         <Stack.Screen name="UserDetail" component={UserDetail} />
         <Stack.Screen name="Main" component={Main} />
-        <Stack.Screen name="Detail" component={Detail} />
+        <Stack.Screen name="PostComments" component={PostComments} />
         <Stack.Screen name="Photos" component={Photos} />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
 
-function Detail({route}) {
-  const {id} = route?.params;
-  const [post, setPost] = useState({});
-  const [comments, setComments] = useState([]);
-
-  useEffect(() => {
-    APIService.getPostComments(id).then(response => {
-      setComments(response);
-    });
-    APIService.getPostDetail(id).then(response => {
-      setPost(response);
-    });
-  }, []);
-
-  return (
-    <View style={{flex: 1, backgroundColor: 'white'}}>
-      <Text>PostId: {post.id}</Text>
-      <Text>Title: {post.title}</Text>
-      <Text>Body: {post.body}</Text>
-      <Text style={{marginVertical: 10}}>Comment:</Text>
-      <FlatList
-        data={comments}
-        renderItem={({item}) => (
-          <View
-            style={{
-              borderBottomWidth: 1,
-            }}>
-            <Text>name: {item.name}</Text>
-            <Text>email: {item.email}</Text>
-            <Text>content: {item.body}</Text>
-          </View>
-        )}
-      />
-    </View>
-  );
-}
 
 function Main({navigation}) {
   const [listPost, setListPost] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [textSearch, setTextSearch] = useState('');
+
   useEffect(() => {
     fetch();
   }, []);
@@ -112,23 +92,58 @@ function Main({navigation}) {
   };
 
   const pressItem = id => {
-    navigation.navigate('Detail', {id: id});
+    navigation.navigate('PostComments', {id: id});
   };
 
   const renderItem = ({item}) => {
     return (
       <TouchableOpacity
         onPress={() => pressItem(item.id)}
-        style={{borderBottomWidth: 1, marginBottom: 10}}>
-        <Text>ID: {item.id}</Text>
-        <Text>Title: {item.title}</Text>
+        style={styles.postItem}>
+        <View style={styles.postItem_id}>
+          <Text style={{color: '#fff', fontSize: 20}}>{item.id}</Text>
+        </View>
+        <View style={styles.postItem_content}>
+          <Text style={styles.postItem_title} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.postItem_body} numberOfLines={2}>
+            {item.body}
+          </Text>
+        </View>
       </TouchableOpacity>
     );
   };
 
+  useEffect(() => {
+    if (textSearch) {
+      const list = listPost.filter(item =>
+        item.title.toLowerCase().includes(textSearch.toLowerCase())
+      );
+      console.log(textSearch)
+      console.log(list)
+      setListPost(list);
+      // setTextSearch('');
+    } else {
+      setListPost([]);
+    }
+  }, [textSearch])
+  // console.log(textSearch)
+
   return (
-    <View style={{flex: 1, backgroundColor: 'white'}}>
+    <View style={styles.container}>
       <FlatList
+        ListHeaderComponent={() => (
+          <View>
+            <Text style={styles.header}>Feed</Text>
+            <TextInput
+              placeholder="Search"
+              style={styles.search}
+              value={textSearch}
+              onChangeText={setTextSearch}
+            />
+          </View>
+        )}
         data={listPost}
         refreshing={loading}
         onRefresh={fetch}
@@ -137,4 +152,57 @@ function Main({navigation}) {
     </View>
   );
 }
-1;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  header: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#000',
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  search: {
+    width: windowWidth - 40,
+    backgroundColor: '#F6F6F6',
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+  postItem: {
+    flexDirection: 'row',
+    width: windowWidth - 60,
+    alignItems: 'center',
+    // justifyContent: 'center',
+    marginLeft: 20,
+    marginBottom: 10,
+  },
+  postItem_id: {
+    width: 50,
+    height: 50,
+    backgroundColor: '#5DB075',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+  },
+  postItem_content: {
+    marginLeft: 10,
+    marginRight: 20,
+    justifyContent: 'flex-start',
+    width: windowWidth - 100,
+  },
+  postItem_title: {
+    fontSize: 20,
+    fontWeight: '500',
+    color: '#000',
+  },
+  postItem_body: {
+    fontSize: 15,
+    color: '#000',
+  },
+});
