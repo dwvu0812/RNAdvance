@@ -1,6 +1,8 @@
 import {StyleSheet, Text, View, FlatList, TouchableOpacity} from 'react-native';
 import React, {useState, useEffect} from 'react';
 import APIService from '../Networking/API';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
 
 export default function User({navigation}) {
   const [users, setUsers] = useState([]);
@@ -10,7 +12,7 @@ export default function User({navigation}) {
     });
   }, []);
   return (
-    <View>
+    <View style={{flex: 1}}>
       <View style={{backgroundColor: '#5DB075'}}>
       <Text style={styles.text}>User List</Text>
 
@@ -27,9 +29,15 @@ export default function User({navigation}) {
                 navigation.navigate('UserDetail', {
                   id: item.id,
                   username: item.username,
+                  name: item.name,
                 })
               }>
-              <Text style={styles.itemId}>{item.id}</Text>
+              
+              <View style={{backgroundColor: '#F6F6F6', width: 50, height: 50, borderRadius: 10,
+              alignItems: 'center', justifyContent: 'center', marginRight: 10}}>
+     
+                <Ionicons name="ios-person" size={30} color="#5DB075" />
+              </View>
               <View style={styles.itemText}>
                 <Text style={styles.username}>{item.username}</Text>
                 <Text style={styles.name}>{item.name}</Text>
@@ -46,8 +54,8 @@ const styles = StyleSheet.create({
   container: {},
   text: {
     textAlign: 'center',
-    fontSize: 30,
-    color: '#000',
+    fontSize: 25,
+    color: '#fff',
     fontWeight: '700',
     marginVertical: 10,
   },
@@ -55,10 +63,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     flexDirection: 'row',
-    marginBottom: 20,
+    marginTop: 10,
     marginLeft: 20,
     marginRight: 20,
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
   itemId: {
     width: 40,
